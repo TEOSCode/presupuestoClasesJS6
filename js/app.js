@@ -1,6 +1,6 @@
 //Variables y selectores
 const fomrulario = document.querySelector('#agregar-gasto');
-const gastoListado = document.querySelector('#gastos ul');
+const gastosListado = document.querySelector('#gastos ul');
 //Eventos
 eventListeners();
 function eventListeners() {
@@ -14,9 +14,9 @@ class Presupuesto {
     this.restante = Number(presupuesto);
     this.gastos = [];
   }
+  //Agregar el gasto nuevo al arreglo gastos
   nuevoGasto(gasto) {
     this.gastos = [...this.gastos, gasto];
-    console.log(this.gastos);
   }
 }
 class UI {
@@ -42,6 +42,33 @@ class UI {
       divAlerta.remove();
     }, 3000);
   }
+  agregarGastoListado(gastos) {
+    this.limpiarHTML(); //eliminar el HTML previo
+    gastos.forEach(gasto => {
+      const {cantidad, nombre, id} = gasto;
+      //Crear Li para listar los gastos
+      const nuevoGasto = document.createElement('li');
+      nuevoGasto.className =
+        'list-group-item d-flex justify-content-between align-items-center';
+      nuevoGasto.dataset.id = id;
+      //agregar al HTML
+      nuevoGasto.innerHTML = `
+        ${nombre} <span class="badge badge-primary badge-pill">$${cantidad}</sp>
+      `;
+      //boton para agregar el gasto
+      const btnBorrar = document.createElement('button');
+      btnBorrar.innerHTML = '&times';
+      btnBorrar.classList.add('btn', 'btn-danger', 'borrar-gasto');
+      nuevoGasto.appendChild(btnBorrar);
+      //Agregar al HTML
+      gastosListado.appendChild(nuevoGasto);
+    });
+  }
+  limpiarHTML() {
+    while (gastosListado.firstChild) {
+      gastosListado.removeChild(gastosListado.firstChild);
+    }
+  }
 }
 // Instancias
 const ui = new UI();
@@ -65,11 +92,12 @@ function agregarGasto(e) {
   e.preventDefault();
   const nombre = document.querySelector('#gasto').value;
   const cantidad = Number(document.querySelector('#cantidad').value);
-
+  //validar si los campos estan llenos
   if (!nombre || !cantidad) {
     ui.imprimirAlerta('Ambos campos son obligatorios', 'error');
     return;
   } else if (cantidad <= 0 || isNaN(cantidad)) {
+    //Validar el campo cantidad
     ui.imprimirAlerta('Cantidad no valida', 'error');
     return;
   }
@@ -78,6 +106,9 @@ function agregarGasto(e) {
   presupuesto.nuevoGasto(gasto);
   //mensaje de agregado
   ui.imprimirAlerta('Correcto');
+  //Imprimir los gastos
+  const {gastos} = presupuesto;
+  ui.agregarGastoListado(gastos);
   //Reinicia el formulario
   fomrulario.reset();
 }
