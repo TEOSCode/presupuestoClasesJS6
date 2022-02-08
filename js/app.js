@@ -17,6 +17,15 @@ class Presupuesto {
   //Agregar el gasto nuevo al arreglo gastos
   nuevoGasto(gasto) {
     this.gastos = [...this.gastos, gasto];
+    this.calcularRestante();
+  }
+  //calcular restante
+  calcularRestante() {
+    const gastado = this.gastos.reduce(
+      (total, gasto) => total + gasto.cantidad,
+      0
+    );
+    this.restante = this.presupuesto - gastado;
   }
 }
 class UI {
@@ -53,7 +62,7 @@ class UI {
       nuevoGasto.dataset.id = id;
       //agregar al HTML
       nuevoGasto.innerHTML = `
-        ${nombre} <span class="badge badge-primary badge-pill">$${cantidad}</sp>
+        ${nombre} <span class="badge badge-primary badge-pill">$${cantidad}</span>
       `;
       //boton para agregar el gasto
       const btnBorrar = document.createElement('button');
@@ -67,6 +76,26 @@ class UI {
   limpiarHTML() {
     while (gastosListado.firstChild) {
       gastosListado.removeChild(gastosListado.firstChild);
+    }
+  }
+  actualizarRestante(restante) {
+    document.querySelector('#restante').textContent = restante;
+  }
+  comprobarPresupuesto(presupuestoObj) {
+    const {presupuesto, restante} = presupuestoObj;
+    const restanteDiv = document.querySelector('.restante');
+    //comprobar 25%
+    if (presupuesto / 4 > restante) {
+      restanteDiv.classList.remove('alert-success', 'alert-warning');
+      restanteDiv.classList.add('alert-danger');
+    } else if (presupuesto / 2 > restante) {
+      restanteDiv.classList.remove('alert-success', 'alert-danger');
+      restanteDiv.classList.add('alert-warning');
+    }
+
+    if (restante <= 0) {
+      ui.imprimirAlerta('El presupuesto se ha agotado', 'error');
+      fomrulario.querySelector('button[type="submit"]').disabled = true;
     }
   }
 }
@@ -107,8 +136,10 @@ function agregarGasto(e) {
   //mensaje de agregado
   ui.imprimirAlerta('Correcto');
   //Imprimir los gastos
-  const {gastos} = presupuesto;
+  const {gastos, restante} = presupuesto;
   ui.agregarGastoListado(gastos);
+  ui.actualizarRestante(restante);
+  ui.comprobarPresupuesto(presupuesto);
   //Reinicia el formulario
   fomrulario.reset();
 }
